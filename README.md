@@ -30,6 +30,7 @@ Option 1: run one at a time
 
 e.g.
 ```
+python mll/e2e_fixpoint.py --ref myexpref123 --meanings 3x10 --train-acc 0.0 --link RL --softmax-sup --send-arch HierZero:dgsend --recv-arch Hier:dgrecv --max-e2e-steps 55000
 ```
 
 Option 2: run in bulk
