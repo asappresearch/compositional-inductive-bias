@@ -1,0 +1,5 @@
+matplotlib
+tabletext
+torch
+scipy
+mlflow>=1.13.1

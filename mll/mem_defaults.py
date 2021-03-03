@@ -1,0 +1,10 @@
+opt = 'Adam'
+send_ent_reg = 0.01
+recv_ent_reg = 0.01
+lr = 0.001
+l2 = 0.0
+drop = 0.0
+clip_grad = 5.0
+gumbel_tau = 1.2
+embedding_size = 128
+render_every_seconds = 1.0
