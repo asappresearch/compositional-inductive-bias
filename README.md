@@ -1,5 +1,5 @@
 # compositional-inductive-bias
-Code for work "A Framework for Measuring Compositional Inductive Bias", by Perkins, 2021
+Code for work "A Framework for Measuring Compositional Inductive Bias", by Perkins, 2021, https://arxiv.org/abs/2103.04180
 
 ## To run
 
