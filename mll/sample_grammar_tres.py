@@ -20,7 +20,9 @@ class Compose(nn.Module):
         self.num_terms = num_terms
         self.seq_len = seq_len
         self.vocab_size = vocab_size
-        self.proj_l = [nn.Linear(self.seq_len, self.seq_len) for i in range(num_terms)]
+        self.proj_l = nn.ModuleList()
+        for i in range(num_terms):
+            self.proj_l.append(nn.Linear(self.seq_len, self.seq_len))
 
     def forward(self, *args):
         x_l = [arg.view(1, self.vocab_size + 2, self.seq_len) for arg in args]
