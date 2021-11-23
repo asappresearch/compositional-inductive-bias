@@ -1,0 +1,4 @@
+task_type: ShapeColor
+grammar: Compositional
+autoinc_every: 8
+num_holdout: 0

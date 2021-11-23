@@ -1,5 +1,6 @@
 import subprocess
 import json
+from typing import Iterable, Tuple, List, Optional
 
 
 def run(cmd_list, tail_lines=0):
@@ -13,7 +14,6 @@ def get_recent_logfiles(path, age_minutes):
 
 
 def get_logfiles_by_pattern(path, pattern):
-    #  files = subprocess.check_output(['find', path, '-cmin', '-%s' % age_minutes]).decode('utf-8').split('\n')
     cmd_list = ['ls', path]
     print(cmd_list)
     files = subprocess.check_output(cmd_list).decode('utf-8').split('\n')
@@ -36,6 +36,19 @@ def tail(file, lines):
     return subprocess.check_output(['tail', '-n', str(lines), file]).decode('utf-8')
 
 
+def get_filepath_of_longest_file(filepaths: Iterable[str]) -> Tuple[str, int]:
+    longest_filepath = ''
+    max_lines = -1
+    for filepath in filepaths:
+        print(filepath)
+        num_lines = get_num_lines(filepath)
+        if num_lines > max_lines:
+            max_lines = num_lines
+            longest_filepath = filepath
+    filepath = longest_filepath
+    return filepath, max_lines
+
+
 def get_ref(filepath):
     try:
         with open(filepath, 'r') as f:
@@ -53,7 +66,7 @@ def get_ref(filepath):
         return ''
 
 
-def get_meta_keys(filepath, keys):
+def get_meta_keys(filepath: str, keys: List[str]) -> List[Optional[str]]:
     try:
         with open(filepath, 'r') as f:
             meta_line = f.readline()

@@ -5,7 +5,7 @@ class Params(object):
 
     def __repr__(self):
         res = ''
-        for k, v in self.__dict__.items():
+        for k, v in sorted(self.__dict__.items()):
             res += '  ' + str(k) + ':' + str(v) + '\n'
         return res
 

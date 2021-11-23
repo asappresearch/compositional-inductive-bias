@@ -44,7 +44,7 @@ class H5Wrapper(object):
     def __init__(self, h5_f):
         self.h5_f = h5_f
 
-    def store_value(self, key,value):
+    def store_value(self, key, value):
         store_value(self.h5_f, key, value)
 
     def store_tensor(self, key, value):

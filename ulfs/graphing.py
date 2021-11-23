@@ -22,7 +22,7 @@ groups = [
 ]
 graphing.plot_groups2_combos(groups)
 """
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Dict, List, Tuple
 import matplotlib.pyplot as plt
 import json
 import math
@@ -37,7 +37,7 @@ from ulfs import graphing_indexes
 log_dir = '../logs'
 
 
-def get_log_results(logfile, step_key, skip_record_types, value_key, record_type=None, max_step=None):
+def get_log_results(logfile, step_key, skip_record_types, value_key, record_type=None, max_step=None, units=''):
     with open(logfile, 'r') as f:
         c = f.read()
     lines = c.split('\n')
@@ -77,12 +77,22 @@ def get_log_results(logfile, step_key, skip_record_types, value_key, record_type
         values.append(d[value_key])
         value_by_epoch[d[step_key]] = d[value_key]
         time_by_epoch[d[step_key]] = d['elapsed_time']
+
+    if units in ['', 'ones', 'units']:
+        divider = 1
+    elif units == 'thousands':
+        divider = 1000
+    elif units == 'millions':
+        divider = 1000 * 1000
+    else:
+        raise Exception('unknown units ' + units)
+    steps = [s / divider for s in steps]
     return steps, values, value_by_epoch, time_by_epoch
 
 
 def get_log_results_multi(
         logfile: str, step_key: str, skip_record_types: Iterable[str], value_keys: Iterable[str],
-        record_type: Optional[str] = None, max_step: Optional[int] = None):
+        record_type: Optional[str] = None, max_step: Optional[int] = None) -> Tuple[List[int], Dict[str, List[float]]]:
     """
     returns values for multiple keys
     """
@@ -105,7 +115,7 @@ def get_log_results_multi(
         if record_type is not None and d.get('record_type', None) != record_type:
             continue
         if max_step is not None and d[step_key] > max_step:
-            continue
+            break
         if d.get('record_type', None) in skip_record_types:
             continue
         steps.append(d[step_key])
@@ -121,28 +131,8 @@ def plot_logfile2(
 ):
     steps, values, value_by_epoch, time_by_epoch = get_log_results(
         logfile=logfile, step_key=step_key, skip_record_types=skip_record_types, value_key=value_key,
-        record_type=record_type, max_step=max_step
+        record_type=record_type, max_step=max_step, units=units
     )
-    if units in ['', 'ones', 'units']:
-        divider = 1
-    elif units == 'thousands':
-        divider = 1000
-    elif units == 'millions':
-        divider = 1000 * 1000
-    else:
-        raise Exception('unknown units ' + units)
-#     max_step = np.max(steps)
-#     print('max_step', max_step)
-#     divider = 1
-#     units = ''
-#     if max_step >= 3000:
-#         divider = 1000
-#         units = '(thousands)'
-#     if max_step >= 3000000:
-#         divider = 1000000
-#         units = '(millions)'
-    steps = [s / divider for s in steps]
-
     if y_lims is not None:
         plt.ylim(y_lims)
     if x_lims is not None:

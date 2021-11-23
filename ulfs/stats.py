@@ -14,6 +14,7 @@ class Stats(object):
     def reset(self):
         for k in self._keys:
             self.__dict__[k] = 0.0
+        self.its = 0
 
     def __iadd__(self, second):
         assert isinstance(second, Stats)
@@ -22,3 +23,17 @@ class Stats(object):
                 continue
             self.__dict__[k] += second.__dict__[k]
         return self
+
+    def incr(self, key: str, amount):
+        assert key in self._keys
+        self.__dict__[key] += amount
+
+    def add_it(self):
+        self.its += 1
+
+    def to_means(self):
+        means = {}
+        for k in self._keys:
+            k_mean = k.replace('_sum', '')
+            means[k_mean] = self.__dict__[k] / self.its
+        return means

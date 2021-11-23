@@ -40,7 +40,7 @@ default_params = {
     'vocab_size': 4,
     'batch_size': 128,
     'enable_cuda': False,
-    'drop': mem_defaults.drop,
+    'dropout': mem_defaults.drop,
     'num_layers': 1,
     'clip_grad': mem_defaults.clip_grad,
     'e2e_batch_size': 128,
@@ -59,6 +59,7 @@ std_args = {
     'model_file': 'tmp/{name}_{ref}_{hostname}_{date}_{time}.dat',
     'logfile': 'logs/log_{name}_{ref}_{hostname}_{date}_{time}.log',
     'load_last_model': None,
+    'render_every_steps': 50,
     # 'name': 'mem_runner_e2e',
 }
 
@@ -95,6 +96,7 @@ def run_single(
     runner.args_parsed = True
     runner.enable_cuda = default_params['enable_cuda']
     runner.render_every_seconds = std_args['render_every_seconds']
+    runner.render_every_steps = std_args['render_every_steps']
     params_dict = {
         'meanings': args.meanings,
         'corruptions': corruption,
@@ -266,17 +268,22 @@ def parse_args():
     parser.add_argument('--train-acc', type=float, default=0.95, help='when to stop supervised training')
     parser.add_argument('--seed', type=int, default=123, help='seed for lang and model')
     parser.add_argument('--embedding-size', type=int, default=mem_defaults.embedding_size)
-    parser.add_argument('--grammars', type=str, default='Permute,Cumrot,ShuffleWordsDet,WordPairSums')
-    parser.add_argument('--arch-pairs', type=str,
-                        default='RNNAutoReg:dgsend+RNN:dgrecv,'
-                                'RNNAutoReg:RNN+RNN:RNN,RNNAutoReg:GRU+RNN:GRU,'
-                                'RNNAutoReg:LSTM+RNN:LSTM,'
-                                'HierZero:RNN+Hier:RNN,HierZero:GRU+Hier:GRU,'
-                                'HierZero:LSTM+Hier:LSTM,'
-                                'RNNZero2L:RNN+RNN2L:RNN,RNNZero2L:GRU+RNN2L:GRU,RNNZero2L:LSTM+RNN2L:LSTM,'
-                                'RNNZero:RNN+RNN:RNN,RNNZero:GRU+RNN:GRU,'
-                                'RNNZero:LSTM+RNN:LSTM,'
-                                'FC1L+FC')
+    # parser.add_argument('--grammars', type=str, default='Permute,Cumrot,ShuffleWordsDet,WordPairSums')
+    parser.add_argument('--grammars', type=str, default='Permute,RandomProj,Cumrot,ShuffleWordsDet')
+    parser.add_argument(
+        '--arch-pairs', type=str,
+        default=(
+            'RNNAutoReg:dgsend+RNN:dgrecv,'
+            'RNNAutoReg:RNN+RNN:RNN,RNNAutoReg:GRU+RNN:GRU,'
+            'RNNAutoReg:LSTM+RNN:LSTM,'
+            'HierZero:RNN+Hier:RNN,HierZero:GRU+Hier:GRU,'
+            'HierZero:LSTM+Hier:LSTM,'
+            'RNNZero2L:RNN+RNN2L:RNN,RNNZero2L:GRU+RNN2L:GRU,RNNZero2L:LSTM+RNN2L:LSTM,'
+            'RNNZero:RNN+RNN:RNN,RNNZero:GRU+RNN:GRU,'
+            'RNNZero:LSTM+RNN:LSTM,'
+            'FC1L+FC'
+        )
+    )
     parser.add_argument('--max-e2e-ratio', type=float, default=20, help='how much to multiply comp steps for cutoff')
     parser.add_argument('--max-sup-ratio', type=float, default=20, help='how much to multiply comp steps for cutoff')
     parser.add_argument('--max-e2e-steps', type=int, help='after how many steps to stop e2e')

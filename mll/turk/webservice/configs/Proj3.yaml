@@ -1,0 +1,4 @@
+task_type: ShapeColor
+grammar: RandomProj
+autoinc_every: null
+num_holdout: 0

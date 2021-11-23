@@ -1,0 +1,4 @@
+task_type: ShapeColor
+grammar: Permute
+autoinc_every: null
+num_holdout: 0

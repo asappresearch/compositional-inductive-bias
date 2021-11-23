@@ -30,7 +30,8 @@ def get_script_info(log_dir, box, script=None, scripts=None):
             raise Exception('missing ' + box + ', ' + script)
     for script in scripts:
         if len(script2ref2info[script]) > 0:
-            return script2ref2info[script][box]
+            if box in script2ref2info[script]:
+                return script2ref2info[script][box]
     print('script', script, 'scripts', scripts, 'box', box)
     print('files', files)
     raise Exception('not found')

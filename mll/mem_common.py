@@ -47,6 +47,24 @@ def inc_meaning(meaning, base):
             return False
 
 
+def get_corruption(
+        corruption_name: str, vocab_size: int, meanings_per_type: int, num_meaning_types: int, tokens_per_meaning: int,
+        r: np.random.RandomState = None):
+    Corruption = getattr(corruptions_lib, f'{corruption_name}Corruption')
+    print('r', r)
+    corruption_params = {
+        'num_meaning_types': num_meaning_types,
+        'tokens_per_meaning': tokens_per_meaning,
+        'vocab_size': vocab_size,
+        'r': r
+    }
+    if corruption_name in ['ShuffleWordsDet']:
+        corruption_params['meanings_per_type'] = meanings_per_type
+    # print('utterances_by_meaning', self.utterances_by_meaning)
+    corruption = Corruption(**corruption_params)
+    return corruption
+
+
 class CompositionalGrammar(object):
     def __init__(self, num_meaning_types, tokens_per_meaning, meanings_per_type, vocab_size, corruptions):
         """
@@ -99,16 +117,12 @@ class CompositionalGrammar(object):
             j += 1
         if corruptions is not None:
             for corruption_name in corruptions.split(','):
-                Corruption = getattr(corruptions_lib, f'{corruption_name}Corruption')
-                corruption_params = {
-                    'num_meaning_types': self.num_meaning_types,
-                    'tokens_per_meaning': self.tokens_per_meaning,
-                    'vocab_size': vocab_size
-                }
-                if corruption_name in ['ShuffleWordsDet']:
-                    corruption_params['meanings_per_type'] = meanings_per_type
-                # print('utterances_by_meaning', self.utterances_by_meaning)
-                corruption = Corruption(**corruption_params)
+                corruption = get_corruption(
+                    corruption_name=corruption_name, vocab_size=vocab_size,
+                    meanings_per_type=meanings_per_type,
+                    num_meaning_types=self.num_meaning_types,
+                    tokens_per_meaning=self.tokens_per_meaning
+                )
                 self.utterances_by_meaning = corruption(self.utterances_by_meaning)
                 print(f'ran corruption {corruption_name}')
                 assert self.utterances_by_meaning is not None

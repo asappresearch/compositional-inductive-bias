@@ -10,7 +10,7 @@ import pandas as pd
 import mlflow
 import numpy as np
 
-import reduce_common
+from mll.analyse import reduce_common
 
 
 def get_metric_history(run_id, metric_name, step_divide=1, return_times: bool = False):

@@ -1,5 +1,5 @@
 from mll.send_models.hashtable_model import HashtableModel
-from mll.send_models.fc_model import FC2LModel
+from mll.send_models.fc2l_model import FC2LModel
 from mll.send_models.fc1l_model import FC1LModel
 from mll.send_models.rnn_autoreg_model import RNNAutoRegModel, RNNAutoReg2LModel, RNNSamplingModel, RNNSampling2LModel
 from mll.send_models.rnn_hierarchical_model import (

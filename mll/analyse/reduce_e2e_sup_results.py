@@ -6,7 +6,7 @@ from collections import defaultdict
 import pandas as pd
 import numpy as np
 
-import reduce_common
+from mll.analyse import reduce_common
 
 
 include_architectures = set([

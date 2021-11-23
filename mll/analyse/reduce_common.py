@@ -27,13 +27,14 @@ latex_defines = """
 """
 
 
-def average_of(dfs: Sequence[pd.DataFrame], show_stderr: bool, show_mean: bool) -> Tuple[
+def average_of(dfs: Sequence[pd.DataFrame], show_stderr: bool, show_mean: bool, show_ci95: bool = False) -> Tuple[
         pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Takes in list of dataframes
     for any numeric columns, takes average. other columns
     verifies identical
     """
+    assert not show_stderr or not show_ci95
     sums = dfs[0].copy()
     counts = dfs[0].copy()
     fields = dfs[0].columns
@@ -72,9 +73,9 @@ def average_of(dfs: Sequence[pd.DataFrame], show_stderr: bool, show_mean: bool) 
         stderr_row = stderr.loc[index]
         averaged_str_row = averaged_str.loc[index]
         for field in numeric_fields:
-            averaged_str_row[field] = formatting.mean_stderr_to_str(
-                average_row[field], stderr_row[field], stderr_sds=1,
-                show_stderr=show_stderr, show_mean=show_mean, na_val='')
+            averaged_str_row[field] = formatting.mean_err_to_str(
+                average_row[field], stderr_row[field], err_sds=1,
+                show_err=show_stderr, show_mean=show_mean, show_ci95=show_ci95, na_val='')
     averaged_str = averaged_str.reset_index()
     average = average.reset_index()
     return averaged_str, average, counts

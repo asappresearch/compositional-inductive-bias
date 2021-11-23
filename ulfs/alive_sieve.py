@@ -31,7 +31,7 @@ class AliveSieve(object):
 
     @staticmethod
     def mask_to_idxes(mask):
-        return mask.view(-1).nonzero().long().view(-1)
+        return mask.view(-1).nonzero(as_tuple=False).long().view(-1)
 
     def mark_dead(self, dead_mask):
         """

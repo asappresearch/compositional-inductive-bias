@@ -11,7 +11,8 @@ from collections import OrderedDict
 from torch import nn
 import numpy as np
 
-from mll import mem_common, tre
+from mll import mem_common
+from ulfs import tre
 
 
 class Compose(nn.Module):
@@ -20,9 +21,7 @@ class Compose(nn.Module):
         self.num_terms = num_terms
         self.seq_len = seq_len
         self.vocab_size = vocab_size
-        self.proj_l = nn.ModuleList()
-        for i in range(num_terms):
-            self.proj_l.append(nn.Linear(self.seq_len, self.seq_len))
+        self.proj_l = [nn.Linear(self.seq_len, self.seq_len) for i in range(num_terms)]
 
     def forward(self, *args):
         x_l = [arg.view(1, self.vocab_size + 2, self.seq_len) for arg in args]
@@ -76,9 +75,26 @@ def evaluate_tre(args, grammar_object):
             print(i, '/', N)
             last_print = time.time()
     reps = [lift(seq_len=seq_len, vocab_size=args.vocab_size, msg=utts[i]) for i in range(utts.size(0))]
+    reps = [torch.from_numpy(t).float() for t in reps]
     print('prepared reps and specs')
 
-    comp = tre.evaluate(reps, specs, COMP_FN, ERR_FN, quiet=False, steps=1000)
+    # print('reps', reps)
+    print('len(reps)', len(reps))
+    for i in range(5):
+        # print(i, reps[i], type(reps[i]))
+        print(f'reps[{i}].size()', reps[i].size(), reps[i].dtype)
+    reps = torch.stack(reps)
+    print('reps.size()', reps.size())
+    comp = tre.evaluate(
+        reps=reps,
+        oracle_structures=specs,
+        comp_fn=COMP_FN,
+        distance_fn=ERR_FN,
+        quiet=False,
+        steps=1000,
+        max_samples=args.max_samples,
+        tre_lr=0.01,
+        zero_init=True)
     comp = np.mean(comp)
     print('TRE %.3f' % comp)
     return comp

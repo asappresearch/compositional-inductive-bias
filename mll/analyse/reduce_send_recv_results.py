@@ -9,7 +9,7 @@ from typing import Dict, Set
 import pandas as pd
 import numpy as np
 
-import reduce_common
+from mll.analyse import reduce_common
 
 
 include_architectures_by_dir: Dict[str, Set[str]] = {
@@ -90,7 +90,9 @@ def run(args):
     df_counts_by_repr = {}
     for repr, df_by_ref in df_by_ref_by_repr.items():
         df_str, df_mean, df_counts = reduce_common.average_of(list(df_by_ref.values()),
-                                                              show_stderr=args.show_stderr, show_mean=args.show_mean)
+                                                              show_stderr=args.show_stderr,
+                                                              show_mean=args.show_mean,
+                                                              show_ci95=args.show_ci95)
         df_str_by_repr[repr] = df_str
         df_mean_by_repr[repr] = df_mean
         df_counts_by_repr[repr] = df_counts
@@ -134,11 +136,12 @@ if __name__ == '__main__':
     parser.add_argument('--out-csv', type=str, default='{out_ref}.csv')
     parser.add_argument('--out-tex', type=str, default='{out_ref}.tex')
     parser.add_argument('--row-key', type=str, default='arch')
-    parser.add_argument('--exclude-fields', type=str, default='sps,steps,params,Comp_time,rot+perm')
+    parser.add_argument('--exclude-fields', type=str, default='sps,steps,Comp_time,rot+perm')
     parser.add_argument('--ints', type=str, default='')
     parser.add_argument('--skip-max', action='store_true')
     parser.add_argument('--no-mean', action='store_true')
     parser.add_argument('--no-stderr', action='store_true')
+    parser.add_argument('--show-ci95', action='store_true')
     parser.add_argument('--filter-arch', action='store_true')
     parser.add_argument('--maximize', type=str, default='shufdet,shuf')
     parser.add_argument('--exclude-best', type=str, default='model,comp,repr')

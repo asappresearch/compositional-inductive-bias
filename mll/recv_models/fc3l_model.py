@@ -3,7 +3,7 @@ from torch import nn
 from ulfs import nn_modules
 
 
-class FCModel(nn.Module):
+class FC3LModel(nn.Module):
     supports_dropout = True
 
     def __init__(self, embedding_size, vocab_size, utt_len, num_meaning_types, meanings_per_type, dropout):
@@ -21,6 +21,21 @@ class FCModel(nn.Module):
         self.drop = nn.Dropout(dropout)
 
     def forward(self, utts):
+        """
+        3 layers (embedding, linear, linear)
+
+        architecture:
+        - input: utterances
+        - embedding(V + 1, embedding_size)
+        - drop
+        - tanh
+        - reshape to [N][c_len * embedding_size]
+        - linear(c_len * embedding_size, embedding_size)
+        - drop
+        - tanh
+        - linear(embedding_size, n_att * n_val)
+        - reshape to [N][n_att][n_val]
+        """
         batch_size = utts.size(1)
         embs = self.embedding(utts)
         embs = self.drop(embs)

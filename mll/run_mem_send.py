@@ -145,8 +145,14 @@ class Agent(object):
         self.params = params
         p = params
         # assert 'tokens_per_meaning' not in p.__dict__
-        assert 'utt_len' not in p.__dict__
-        self.utt_len = p.tokens_per_meaning * p.num_meaning_types
+        # assert 'utt_len' not in p.__dict__
+        if 'utt_len' in p.__dict__:
+            print('using utt_len from params', p.utt_len)
+            self.utt_len = p.utt_len
+        else:
+            print('calcing utt len = tokens per menaing * num meaning types')
+            self.utt_len = p.tokens_per_meaning * p.num_meaning_types
+        print('self.utt_len', self.utt_len)
         Model = getattr(send_models, f'{p.model}Model')
         model_params = {
             'embedding_size': p.embedding_size,
@@ -158,11 +164,11 @@ class Agent(object):
         }
 
         if Model.supports_gumbel:
-            model_params['gumbel'] = p.gumbel
+            model_params['gumbel'] = p.link == 'Gumbel'
             model_params['gumbel_tau'] = p.gumbel_tau
 
         if Model.supports_dropout:
-            model_params['dropout'] = p.drop
+            model_params['dropout'] = p.dropout
         else:
             print('warning: dropout requested, but not available for ' + p.model)
 
@@ -177,9 +183,9 @@ class Agent(object):
         if p.model in ['Hashtable', 'KNN']:
             self.trainer = NonNeuralTrainer(self.model)
         else:
-            if p.gumbel:
+            if p.link == 'Gumbel':
                 self.trainer = GumbelTrainer(model=self.model, p=p)
-            elif p.rl:
+            elif p.link == 'RL':
                 self.trainer = RLTrainer(model=self.model, p=p)
             else:
                 self.trainer = SoftTrainer(model=self.model, p=p)
@@ -345,9 +351,10 @@ if __name__ == '__main__':
     runner.add_param('--drop', type=float, default=mem_defaults.drop)
     runner.add_param('--opt', type=str, default=mem_defaults.opt)
 
-    runner.add_param('--rl', action='store_true')
+    runner.add_param('--link', type=str, default='soft', choices=['Soft', 'Gumb', 'RL'])
+    # runner.add_param('--rl', action='store_true')
     runner.add_param('--no-normalize-reward-std', action='store_true')
-    runner.add_param('--gumbel', action='store_true')
+    # runner.add_param('--gumbel', action='store_true')
     runner.add_param('--gumbel-tau', type=str, default=mem_defaults.gumbel_tau)
 
     runner.add_param('--seed', type=int, default=123)

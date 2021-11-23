@@ -2,7 +2,9 @@ import time
 import argparse
 import inspect
 import glob
+import random
 import subprocess
+from typing import Optional
 
 import torch
 import numpy as np
@@ -76,6 +78,7 @@ class RunnerBase(object):
             self.params = params
         file_utils.ensure_dirs_exist(['tmp', 'logs'])
         self.last_print = time.time()
+        self.last_print_step = 0
         self.last_save = time.time()
         self.maybe_load_params()
         print('params', self.params)
@@ -84,6 +87,10 @@ class RunnerBase(object):
             self.logger = Logger(
                 self.logfile, self.params, file=self._get_caller_filename(),
                 delay_mlflow=delay_mlflow)
+        if self.enable_cuda:
+            # torch.use_deterministic_algorithms(True)
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False
         self.setup(self.params)
         self.maybe_load_models()
         self.setup_base_run = True
@@ -137,8 +144,9 @@ class RunnerBase(object):
 
         # if '--disable-cuda' not in parser.option_string_actions:
         parser.add_argument('--disable-cuda', action='store_true')
-        parser.add_argument('--save-every-seconds', type=int, default=300)
-        parser.add_argument('--render-every-seconds', type=int, default=30)
+        parser.add_argument('--save-every-seconds', type=int, default=-1)
+        parser.add_argument('--render-every-seconds', type=int, default=30, help='-1 disables')
+        parser.add_argument('--render-every-steps', type=int, default=-1, help='-1 disables')
         parser.add_argument('--name', type=str, default=file, help='used for logfile naming')
         parser.add_argument('--load-last-model', action='store_true')
         parser.add_argument('--model-file', type=str, default='tmp/{name}_{ref}_{hostname}_{date}_{time}.dat')
@@ -160,6 +168,7 @@ class RunnerBase(object):
         self.params_l.append('enable_cuda')
         self.save_every_seconds = args.save_every_seconds
         self.render_every_seconds = args.render_every_seconds
+        self.render_every_steps = args.render_every_steps
         self.load_last_model = args.load_last_model
         self.model_file_glob = args.model_file.format(
             **args.__dict__, hostname='*', date='*', time='*')
@@ -170,7 +179,9 @@ class RunnerBase(object):
             **args.__dict__, hostname=name_utils.hostname(),
             date=name_utils.date_string(), time=name_utils.time_string())
         self.standard_args_dict = {}
-        for k in ['save_every_seconds', 'render_every_seconds', 'model_file', 'logfile', 'name', 'load_last_model']:
+        for k in [
+                'save_every_seconds', 'render_every_seconds', 'render_every_steps',
+                'model_file', 'logfile', 'name', 'load_last_model']:
             self.standard_args_dict[k] = args.__dict__[k]
             del args.__dict__[k]
 
@@ -222,6 +233,14 @@ class RunnerBase(object):
         if self.loaded_state:
             self.load_models()
 
+    def set_seed(self, seed: int):
+        """
+        set seeed, across random, torch, numpy
+        """
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        random.seed(123)
+
     def save_to(self, model_file):
         state = {}
         state['params'] = self.params
@@ -243,7 +262,12 @@ class RunnerBase(object):
         self.last_save = time.time()
 
     def should_render(self):
-        if time.time() - self.last_print >= self.render_every_seconds:
+        if self.render_every_seconds > 0 and time.time() - self.last_print >= self.render_every_seconds:
+            return True
+        if (
+            self.render_every_steps > 0 and
+            getattr(self, self.step_key) - self.last_print_step >= self.render_every_steps
+        ):
             return True
         return False
 
@@ -271,10 +295,13 @@ class RunnerBase(object):
         if self.should_render():
             self.print_and_log(stats_dict, formatstr, step=step)
 
-    def print_and_log(self, stats_dict, formatstr, step: int = 0):
+    def print_and_log(self, stats_dict, formatstr, step: Optional[int] = None):
         stats_dict[self.step_key] = getattr(self, self.step_key)
         stats_dict['elapsed_time'] = time.time() - self.start_time
         print(formatstr.format(**stats_dict))
+        if step is None:
+            step = getattr(self, self.step_key)
         if self.logfile is not None and self.logfile != '':
             self.log(stats_dict, step=step)
         self.last_print = time.time()
+        self.last_print_step = getattr(self, self.step_key)

@@ -1,0 +1,6 @@
+task_type: ShapeColor
+grammar: Permute
+autoinc_every: 8
+num_holdout: 3
+holdout_idxes: [29, 39, 49]
+cents_per_ten: 4

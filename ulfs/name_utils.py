@@ -9,7 +9,7 @@ import inspect
 
 def file():
     previous_frame = inspect.currentframe().f_back
-    (filename, line_number, 
+    (filename, line_number,
         function_name, lines, index) = inspect.getframeinfo(previous_frame)
     return filename.split('/')[-1].split('.')[0]
 

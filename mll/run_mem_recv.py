@@ -146,8 +146,14 @@ class Agent(object):
         self.params = params
         p = params
         # assert 'tokens_per_meaning' not in p.__dict__
-        assert 'utt_len' not in p.__dict__
-        self.utt_len = p.tokens_per_meaning * p.num_meaning_types
+        # assert 'utt_len' not in p.__dict__
+        if 'utt_len' in p.__dict__:
+            print('using utt len from p', p.utt_len)
+            self.utt_len = p.utt_len
+        else:
+            print('using utt_len from tokens per meaning * num meaning types')
+            self.utt_len = p.tokens_per_meaning * p.num_meaning_types
+        print('self.utt_len', self.utt_len)
         Model = getattr(recv_models, f'{p.model}Model')
         model_params = {
             'embedding_size': p.embedding_size,
@@ -157,7 +163,7 @@ class Agent(object):
             'meanings_per_type': p.meanings_per_type,
         }
         if Model.supports_dropout:
-            model_params['dropout'] = p.drop
+            model_params['dropout'] = p.dropout
 
         if 'RNN' in p.model or 'Hier' in p.model:
             model_params['rnn_type'] = p.rnn_type
@@ -169,9 +175,9 @@ class Agent(object):
         if p.model in ['Hashtable', 'KNN']:
             self.trainer = NonNeuralTrainer(self.model)
         else:
-            if p.gumbel:
+            if p.link == 'Gumbel':
                 self.trainer = GumbelTrainer(model=self.model, p=p)
-            elif p.rl:
+            elif p.link == 'RL':
                 self.trainer = RLTrainer(model=self.model, p=p)
             else:
                 self.trainer = SoftTrainer(model=self.model, p=p)
@@ -333,8 +339,9 @@ if __name__ == '__main__':
     runner.add_param('--opt', type=str, default=mem_defaults.opt)
     runner.add_param('--no-normalize-reward-std', action='store_true')
 
-    runner.add_param('--rl', action='store_true')
-    runner.add_param('--gumbel', action='store_true')
+    runner.add_param('--link', type=str, default='soft', choices=['Soft', 'Gumb', 'RL'])
+    # runner.add_param('--rl', action='store_true')
+    # runner.add_param('--gumbel', action='store_true')
     runner.add_param('--gumbel-tau', type=str, default=mem_defaults.gumbel_tau)
 
     runner.add_param('--seed', type=int, default=123)
@@ -354,7 +361,7 @@ if __name__ == '__main__':
         int(v) for v in runner.params.meanings.split('x')]
     del runner.params.__dict__['meanings']
     print('runner.args', runner.args)
-    assert not runner.params.gumbel or not runner.params.rl
+    # assert not runner.params.gumbel or not runner.params.rl
     runner.params.normalize_reward_std = not runner.params.no_normalize_reward_std
     del runner.params.__dict__['no_normalize_reward_std']
     runner.setup_base()

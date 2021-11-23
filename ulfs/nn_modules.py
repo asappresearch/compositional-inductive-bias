@@ -7,22 +7,6 @@ from ulfs import alive_sieve, tensor_utils, rl_common
 from ulfs.tensor_utils import Hadamard
 
 
-# class Gumbel(nn.Module):
-#     def __init__(self, hard, tau):
-#         """
-#         at eval, *always* hard
-#         at training, depends on `hard` parameter
-#         """
-#         self.hard = hard
-#         self.tau = tau
-
-#     def forward(self, x):
-#         if self.training:
-
-#         else:
-#         return x
-
-
 def gumbel_softmax(logits, tau, hard, eps):
     logits_shape = logits.size()
     logits = logits.contiguous().view(-1, logits_shape[-1])
@@ -157,7 +141,8 @@ class MaskedCrit(nn.Module):
         super().__init__()
         self.crit = crit_constr(reduction='none')
 
-    def forward(self, pred, target, mask):
+    def forward(self, pred: torch.Tensor, target: torch.Tensor, mask: torch.Tensor):
+        assert mask.dtype == torch.bool
         loss = self.crit(pred, target)
         loss = tensor_utils.masked_get(loss, mask)
         num_elem = mask.long().sum().item()

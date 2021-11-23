@@ -1,6 +1,7 @@
 import os
 import sys
 from os import path
+from typing import Dict, Any
 
 import PIL.Image
 import PIL.ImageFont
@@ -123,8 +124,12 @@ def save_image_grid(
         print(f'saved image to {filepath}')
 
 
-def filter_dict_by_prefix(dict, prefix):
-    return {k: v for k, v in dict.items() if k.startswith(prefix)}
+def filter_dict_by_prefix(dict: Dict[str, Any], prefix: str, truncate_prefix: bool = False) -> Dict[str, Any]:
+    if truncate_prefix:
+        new_dict = {k.replace(prefix, '', 1): v for k, v in dict.items() if k.startswith(prefix)}
+    else:
+        new_dict = {k: v for k, v in dict.items() if k.startswith(prefix)}
+    return new_dict
 
 
 def reverse_args(args, neg_key, pos_key):

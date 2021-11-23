@@ -40,26 +40,38 @@ class Logger(object):
         meta = self.meta
         ref = self.ref
         mlflow.start_run(run_name=ref)
-        try:
-            meta['argv'] = ' '.join(meta['argv'])
-            gitdiff = meta['gitdiff']
-            gitlog = meta['gitlog']
-            mlflow.log_text(gitdiff, 'gitdiff.txt')
-            mlflow.log_text(gitlog, 'gitlog.txt')
-            mlflow.log_text(json.dumps(meta['params'], indent=2), 'params.txt')
 
-            mlflow.log_params(meta['params'])
+        meta['argv'] = ' '.join(meta['argv'])
+        gitdiff = meta['gitdiff']
+        gitlog = meta['gitlog']
+        mlflow.log_text(gitdiff, 'gitdiff.txt')
+        mlflow.log_text(gitlog, 'gitlog.txt')
+        mlflow.log_text(json.dumps(meta['params'], indent=2), 'params.txt')
+        del meta['gitdiff']
+        del meta['gitlog']
 
-            del meta['gitdiff']
-            del meta['gitlog']
-            del meta['params']
-            mlflow.log_params(meta)
-            mlflow.set_tags(meta)
-            print('stored experiment details to mlflow server')
-            self.mlflow_started = True
-        except Exception as e:
-            print(e)
-            print('failed to start mlflow run')
+        _to_delete = []
+        for k, v in meta['params'].items():
+            if len(str(v)) > 200:
+                mlflow.log_text(str(v), f'params_{k}')
+                _to_delete.append(k)
+        for k in _to_delete:
+            del meta['params'][k]
+        mlflow.log_params(meta['params'])
+        del meta['params']
+
+        _to_delete = []
+        for k, v in meta.items():
+            if len(str(v)) > 200:
+                mlflow.log_text(str(v), f'meta_{k}')
+                _to_delete.append(k)
+        for k in _to_delete:
+            del meta[k]
+        mlflow.log_params(meta)
+
+        mlflow.set_tags(meta)
+        print('stored experiment details to mlflow server')
+        self.mlflow_started = True
 
     def log(self, logdict: Dict[str, Any], formatstr: str = None, step: int = 0):
         try:

@@ -2,13 +2,8 @@
 Takes a log file from mem_runner.py, and displays in an easy to use format
 """
 import argparse
-import sys
-import os
 from collections import defaultdict
-from os import path
-from os.path import join
 import json
-import math
 
 import numpy as np
 
@@ -23,7 +18,7 @@ def run(logfile):
         if line.strip() == '':
             continue
         if line.startswith('meta:'):
-            meta = json.loads(line.replace('meta:', ''))
+            # meta = json.loads(line.replace('meta:', ''))
             # print('meta', meta)
             continue
         # print('line', line)

@@ -62,7 +62,6 @@ class GroupedArgumentParser(object):
         return groups
         # return other_args, groups
 
-
     def register_arg(self, arg, group):
         assert arg not in self.group_by_arg
         # print('register_arg', arg, group)

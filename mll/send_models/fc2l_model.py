@@ -22,6 +22,13 @@ class FC2LModel(nn.Module):
         """
         meanings are [N][T], index-encoded
         we'll fluff up to one-hot, then pass through a linear
+
+        Architecture is:
+        - input: onehot meaings [N, n_att * n_val]
+        - linear(n_att * n_val, embedding_size)
+        - tanh
+        - linear(embedding_size, c_len * (V + 1))
+        - reshape to [N][c_len][V + 1]
         """
         N, T = meanings.size()
         meanings_onehot = torch.zeros(N, T, self.meanings_per_type, dtype=torch.float32, device=meanings.device)

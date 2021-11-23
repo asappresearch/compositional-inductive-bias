@@ -12,7 +12,6 @@ def apparent_len(text):
     returns the width assuming we removed the Fore color characters
     """
     plain_text = text
-    num_escapes = 0
     while chr(27) in plain_text:
         pos = plain_text.find(chr(27))
         plain_text = plain_text[:pos] + plain_text[pos + 5:]
@@ -59,10 +58,10 @@ class AsciiScreen(object):
         self.width = width
         self.rows = []
         for h in range(height):
-            # row 
+            # row
             row = ' ' * width
             # for w in range(width):
-                # row.append(' ')
+            # row.append(' ')
             self.rows.append(row)
         # self.rows[3][4] = '*'
         # self.render()
@@ -95,7 +94,7 @@ class AsciiScreen(object):
                 w = apparent_len(r)
                 x = 0
             old = self.rows[y + h]
-                # r = apparent_substr(r, -x, 10000)
+            # r = apparent_substr(r, -x, 10000)
             new = apparent_substr(old, 0, x) + r + apparent_substr(old, x + w, 10000)
             # new = old[:x] + r + old[x + w:]
             self.rows[y + h] = new

@@ -1,9 +1,9 @@
 import torch
-from torch.autograd import Variable
+from typing import Optional
 import torch.nn.functional as F
 
 
-def sample_gumbel(shape, eps=1e-10):
+def sample_gumbel(shape: torch.Size, eps: float = 1e-10):
     """
     Sample from Gumbel(0, 1)
     based on
@@ -14,20 +14,23 @@ def sample_gumbel(shape, eps=1e-10):
     return - torch.log(eps - torch.log(U + eps))
 
 
-def gumbel_softmax_sample(logits, tau, eps=1e-10):
+def gumbel_softmax_sample(
+        logits: torch.Tensor, tau: float, eps: float = 1e-10, gumbel_noise: Optional[torch.Tensor] = None
+) -> torch.Tensor:
     """
     Draw a sample from the Gumbel-Softmax distribution
     based on
     https://github.com/ericjang/gumbel-softmax/blob/3c8584924603869e90ca74ac20a6a03d99a91ef9/Categorical%20VAE.ipynb
     (MIT license)
     """
-    gumbel_noise = sample_gumbel(logits.size(), eps=eps)
-    y = logits + Variable(gumbel_noise)
-    res = F.softmax(y / tau)
+    if gumbel_noise is None:
+        gumbel_noise = sample_gumbel(logits.size(), eps=eps)
+    y = logits + gumbel_noise
+    res = F.softmax(y / tau, dim=-1)
     return res
 
 
-def gumbel_softmax(logits, tau, hard, eps=1e-10):
+def gumbel_softmax(logits: torch.Tensor, tau: float, hard: bool, eps: float = 1e-10) -> torch.Tensor:
     """
     Sample from the Gumbel-Softmax distribution and optionally discretize.
     Args:
@@ -48,7 +51,7 @@ def gumbel_softmax(logits, tau, hard, eps=1e-10):
     assert len(shape) == 2
     y_soft = gumbel_softmax_sample(logits, tau=tau, eps=eps)
     if hard:
-        _, k = y_soft.data.max(-1)
+        _, k = y_soft.detach().max(-1)
         # this bit is based on
         # https://discuss.pytorch.org/t/stop-gradients-for-st-gumbel-softmax/530/5
         y_hard = torch.FloatTensor(*shape).zero_().scatter_(-1, k.view(-1, 1), 1.0)
@@ -57,7 +60,7 @@ def gumbel_softmax(logits, tau, hard, eps=1e-10):
         #   subtract y_soft value)
         # - makes the gradient equal to y_soft gradient (since we strip
         #   all other gradients)
-        y = Variable(y_hard - y_soft.data) + y_soft
+        y = (y_hard - y_soft).detach() + y_soft
     else:
         y = y_soft
     return y

@@ -3,7 +3,11 @@ import numpy as np
 
 
 class RandomProjCorruption(object):
-    def __init__(self, num_meaning_types, tokens_per_meaning, vocab_size):
+    def __init__(self, num_meaning_types, tokens_per_meaning, vocab_size, r: np.random.RandomState = None):
+        # DONE
+        if r is None:
+            r = np.random.RandomState()
+        self.r = r
         self.num_meaning_types = num_meaning_types
         self.tokens_per_meaning = tokens_per_meaning
         self.vocab_size = vocab_size
@@ -12,7 +16,8 @@ class RandomProjCorruption(object):
         tot_examples, utt_len = utterances_by_meaning.size()
         utts_onehot = torch.zeros(tot_examples, utt_len, self.vocab_size, dtype=torch.float32)
         utts_onehot.scatter_(-1, utterances_by_meaning.unsqueeze(-1), 1)
-        proj = torch.rand(utt_len * self.vocab_size, utt_len * self.vocab_size)
+        print('r', self.r)
+        proj = torch.from_numpy(self.r.rand(utt_len * self.vocab_size, utt_len * self.vocab_size)).float()
         utts_onehot_v = utts_onehot.view(tot_examples, -1) @ proj
         utts_onehot = utts_onehot_v.view(tot_examples, utt_len, self.vocab_size)
         _, utterances_by_meaning = utts_onehot.max(dim=-1)
@@ -20,7 +25,11 @@ class RandomProjCorruption(object):
 
 
 class WordPairSumsCorruption(object):
-    def __init__(self, num_meaning_types, tokens_per_meaning, vocab_size):
+    def __init__(self, num_meaning_types, tokens_per_meaning, vocab_size, r: np.random.RandomState = None):
+        # determinstic
+        if r is None:
+            r = np.random.RandomState()
+        self.r = r
         self.num_meaning_types = num_meaning_types
         self.tokens_per_meaning = tokens_per_meaning
         self.vocab_size = vocab_size
@@ -82,7 +91,11 @@ def verify_bijective(self, utterances_by_meaning):
 
 
 class ShuffleWordsCorruption(object):
-    def __init__(self, num_meaning_types, tokens_per_meaning, vocab_size):
+    def __init__(self, num_meaning_types, tokens_per_meaning, vocab_size, r: np.random.RandomState = None):
+        # DONE
+        if r is None:
+            r = np.random.RandomState()
+        self.r = r
         self.num_meaning_types = num_meaning_types
         self.tokens_per_meaning = tokens_per_meaning
 
@@ -90,14 +103,20 @@ class ShuffleWordsCorruption(object):
         tot_examples, utt_len = utterances_by_meaning.size()
         view = utterances_by_meaning.view(tot_examples, self.num_meaning_types, self.tokens_per_meaning)
         for n in range(tot_examples):
-            idxes = torch.from_numpy(np.random.choice(self.num_meaning_types, self.num_meaning_types, replace=False))
+            idxes = torch.from_numpy(self.r.choice(self.num_meaning_types, self.num_meaning_types, replace=False))
             view[n] = view[n, idxes]
         verify_bijective(self, utterances_by_meaning)
         return utterances_by_meaning
 
 
 class ShuffleWordsDetCorruption(object):
-    def __init__(self, num_meaning_types, tokens_per_meaning, vocab_size, meanings_per_type):
+    def __init__(
+            self, num_meaning_types, tokens_per_meaning, vocab_size, meanings_per_type,
+            r: np.random.RandomState = None):
+        # DONE
+        if r is None:
+            r = np.random.RandomState()
+        self.r = r
         self.num_meaning_types = num_meaning_types
         self.tokens_per_meaning = tokens_per_meaning
         self.meanings_per_type = meanings_per_type
@@ -106,7 +125,7 @@ class ShuffleWordsDetCorruption(object):
         self.ordering_by_last_meaning = torch.zeros(meanings_per_type, num_meaning_types, dtype=torch.int64)
         for i in range(meanings_per_type):
             self.ordering_by_last_meaning[i] = torch.from_numpy(
-                np.random.choice(self.num_meaning_types, self.num_meaning_types, replace=False))
+                r.choice(self.num_meaning_types, self.num_meaning_types, replace=False))
 
     def __call__(self, utterances_by_meaning):
         tot_examples, utt_len = utterances_by_meaning.size()
@@ -121,18 +140,27 @@ class ShuffleWordsDetCorruption(object):
 
 
 class PermuteCorruption(object):
-    def __init__(self, num_meaning_types, tokens_per_meaning, vocab_size):
+    def __init__(self, num_meaning_types, tokens_per_meaning, vocab_size, r: np.random.RandomState = None):
+        # DONE
+        if r is None:
+            r = np.random.RandomState()
+        self.r = r
         pass
 
     def __call__(self, utterances_by_meaning):
         tot_examples, utt_len = utterances_by_meaning.size()
-        self.idxes = torch.from_numpy(np.random.choice(utt_len, utt_len, replace=False))
+        self.idxes = torch.from_numpy(self.r.choice(utt_len, utt_len, replace=False))
+        print('permute', self.idxes)
         utterances_by_meaning = utterances_by_meaning[:, self.idxes]
         return utterances_by_meaning
 
 
 class CumrotCorruption(object):
-    def __init__(self, num_meaning_types, tokens_per_meaning, vocab_size):
+    def __init__(self, num_meaning_types, tokens_per_meaning, vocab_size, r: np.random.RandomState = None):
+        # DETERMIISTC
+        if r is None:
+            r = np.random.RandomState()
+        self.r = r
         self.num_meaning_types = num_meaning_types
         self.tokens_per_meaning = tokens_per_meaning
         self.vocab_size = vocab_size
